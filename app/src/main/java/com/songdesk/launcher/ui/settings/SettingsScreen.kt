@@ -40,13 +40,11 @@ import com.songdesk.launcher.ui.theme.AccentOrange
 import com.songdesk.launcher.ui.theme.AccentTeal
 import com.songdesk.launcher.ui.theme.TextPrimary
 import com.songdesk.launcher.ui.theme.TextSecondary
-import com.songdesk.launcher.ui.theme.Wallpaper
 
-/** 设置页：壁纸四选一 + 强调色三选一 + 嗅探/演示开关 + 关于 */
+/** 设置页：强调色三选一 + AI 助理 + 嗅探/演示开关 + 关于 */
 @Composable
 fun SettingsScreen(
     accentIndex: Int,
-    wallpaperIndex: Int,
     sniffing: Boolean,
     navDemo: Boolean,
     voiceOn: Boolean,
@@ -57,7 +55,6 @@ fun SettingsScreen(
     onSniffingChange: (Boolean) -> Unit,
     onNavDemoChange: (Boolean) -> Unit,
     onAccentChange: (Int) -> Unit,
-    onWallpaperChange: (Int) -> Unit,
     onBack: () -> Unit,
     onExit: () -> Unit,
 ) {
@@ -84,27 +81,6 @@ fun SettingsScreen(
         Spacer(Modifier.height(20.dp))
 
         GlassCard(Modifier.fillMaxSize(), contentFill = true) {
-            SectionLabel("壁纸")
-            Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                Wallpaper.entries.forEachIndexed { i: Int, wp: Wallpaper ->
-                    WallpaperThumb(
-                        wp = wp,
-                        selected = wallpaperIndex == i,
-                        onClick = { onWallpaperChange(i) },
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(22.dp))
-            SectionLabel("强调色")
-            Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                AccentSwatch(AccentIce, 0, accentIndex, onAccentChange)
-                AccentSwatch(AccentTeal, 1, accentIndex, onAccentChange)
-                AccentSwatch(AccentOrange, 2, accentIndex, onAccentChange)
-            }
-
             Spacer(Modifier.height(24.dp))
             SectionLabel("Dock 自定义")
             Spacer(Modifier.height(8.dp))
@@ -224,51 +200,3 @@ private fun AccentSwatch(
     }
 }
 
-/** 壁纸缩略图：点击切换全局壁纸 */
-@Composable
-private fun WallpaperThumb(
-    wp: com.songdesk.launcher.ui.theme.Wallpaper,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val ctx = androidx.compose.ui.platform.LocalContext.current
-    val resId = remember(wp) {
-        ctx.resources.getIdentifier(wp.resName, "drawable", ctx.packageName)
-    }
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            Modifier
-                .size(width = 168.dp, height = 94.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .clickable(onClick = onClick)
-        ) {
-            if (resId != 0) {
-                androidx.compose.foundation.Image(
-                    painter = androidx.compose.ui.res.painterResource(resId),
-                    contentDescription = wp.label,
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
-            if (selected) {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .background(
-                            color = Color(0x332E90FA),
-                            shape = RoundedCornerShape(14.dp),
-                        )
-                )
-                Box(
-                    Modifier
-                        .size(20.dp)
-                        .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                        .background(color = TextPrimary, shape = CircleShape)
-                )
-            }
-        }
-        Spacer(Modifier.height(6.dp))
-        Text(wp.label, style = TextStyle(fontSize = 12.sp), color = TextSecondary)
-    }
-}

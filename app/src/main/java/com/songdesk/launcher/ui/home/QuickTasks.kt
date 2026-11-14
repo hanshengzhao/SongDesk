@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -125,24 +127,29 @@ fun QuickTasks(
                     .clickable { task.action(context, repo, bridge) },
                 contentFill = true,
             ) {
-                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Column(
+                    Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    // 描边圆圈图标（对齐设计稿）
                     Surface(
                         shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                        color = Color.Transparent,
+                        border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)),
                     ) {
-                        Icon(
-                            task.icon,
-                            contentDescription = task.title,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .padding(10.dp)
-                                .size(30.dp),
-                        )
+                        Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) {
+                            Icon(
+                                task.icon,
+                                contentDescription = task.title,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(28.dp),
+                            )
+                        }
                     }
+                    Spacer(Modifier.height(14.dp))
+                    Text(task.title, style = TextStyle(fontSize = 18.sp), color = TextPrimary)
                 }
-                Spacer(Modifier.height(10.dp))
-                Text(task.title, style = TextStyle(fontSize = 16.sp), color = TextPrimary)
-                Text(task.subtitle, style = TextStyle(fontSize = 12.sp), color = TextSecondary)
             }
         }
     }

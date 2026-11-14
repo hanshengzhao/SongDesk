@@ -17,6 +17,8 @@ data class NowPlaying(
     val title: String = "",
     val artist: String = "",
     val playing: Boolean = false,
+    val positionMs: Long = 0L,
+    val durationMs: Long = 0L,
 )
 
 object NowPlayingStore {
@@ -94,12 +96,15 @@ class MediaNotificationListener : NotificationListenerService() {
             return
         }
         val md = playing.metadata
+        val ps = playing.playbackState
         NowPlayingStore.update(
             NowPlaying(
                 pkg = playing.packageName,
                 title = md?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "",
                 artist = md?.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "",
-                playing = playing.playbackState?.state == android.media.session.PlaybackState.STATE_PLAYING,
+                playing = ps?.state == android.media.session.PlaybackState.STATE_PLAYING,
+                positionMs = ps?.position ?: 0L,
+                durationMs = md?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L,
             )
         )
     }

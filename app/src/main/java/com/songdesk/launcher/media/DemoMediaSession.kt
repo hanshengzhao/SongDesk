@@ -15,8 +15,10 @@ import android.media.session.PlaybackState
 object DemoMediaSession {
 
     private const val CHANNEL_ID = "songdesk_demo_media"
+    private const val DEMO_DURATION_MS = 252_000L  // 4:12
     private var session: MediaSession? = null
     private var playing = true
+    private var anchorMs = 0L
 
     fun toggle(context: Context): Boolean {
         val app = context.applicationContext
@@ -29,24 +31,18 @@ object DemoMediaSession {
         val s = MediaSession(app, "SongDeskDemo")
         s.setMetadata(
             MediaMetadata.Builder()
-                .putString(MediaMetadata.METADATA_KEY_TITLE, "晴天")
-                .putString(MediaMetadata.METADATA_KEY_ARTIST, "周杰伦 · 叶惠美")
+                .putString(MediaMetadata.METADATA_KEY_TITLE, "深空电台")
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, "湾流计划 · 蓝牙音乐")
+                .putLong(MediaMetadata.METADATA_KEY_DURATION, DEMO_DURATION_MS)
                 .build()
         )
-        s.setPlaybackState(
-            PlaybackState.Builder()
-                .setState(PlaybackState.STATE_PLAYING, 0, 1f)
-                .setActions(
-                    PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or
-                        PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS
-                )
-                .build()
-        )
+        anchorMs = System.currentTimeMillis()
+        s.setPlaybackState(buildState().build())
         s.setCallback(object : MediaSession.Callback() {
-            override fun onPlay() { playing = true; push(app, s) }
-            override fun onPause() { playing = false; push(app, s) }
-            override fun onSkipToNext() { push(app, s) }
-            override fun onSkipToPrevious() { push(app, s) }
+            override fun onPlay() { playing = true; anchorMs = System.currentTimeMillis() - pausedAt; push(app, s) }
+            override fun onPause() { pausedAt = position(); playing = false; push(app, s) }
+            override fun onSkipToNext() { anchorMs = System.currentTimeMillis(); push(app, s) }
+            override fun onSkipToPrevious() { anchorMs = System.currentTimeMillis(); push(app, s) }
         })
         s.isActive = true
         session = s
@@ -54,6 +50,23 @@ object DemoMediaSession {
         push(app, s)
         return true
     }
+
+    private var pausedAt = 0L
+
+    private fun position(): Long =
+        ((System.currentTimeMillis() - anchorMs) % DEMO_DURATION_MS)
+
+    private fun buildState(): PlaybackState.Builder =
+        PlaybackState.Builder()
+            .setState(
+                if (playing) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED,
+                position(),
+                if (playing) 1f else 0f,
+            )
+            .setActions(
+                PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or
+                    PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS
+            )
 
     private fun push(context: Context, s: MediaSession) {
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -63,8 +76,8 @@ object DemoMediaSession {
         val stateIcon = if (playing) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
         val notification = Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(stateIcon)
-            .setContentTitle("晴天")
-            .setContentText("周杰伦 · 叶惠美")
+            .setContentTitle("深空电台")
+            .setContentText("湾流计划 · 蓝牙音乐")
             .setOngoing(playing)
             .build()
         // 直接把 session token 放进 extras（等价于 MediaStyle 的做法），监听器据此 attach
@@ -73,9 +86,11 @@ object DemoMediaSession {
         NowPlayingStore.update(
             NowPlaying(
                 pkg = context.packageName,
-                title = "晴天",
-                artist = "周杰伦 · 叶惠美",
+                title = "深空电台",
+                artist = "湾流计划 · 蓝牙音乐",
                 playing = playing,
+                positionMs = position(),
+                durationMs = DEMO_DURATION_MS,
             )
         )
     }

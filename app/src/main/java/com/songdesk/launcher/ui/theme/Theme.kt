@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -37,32 +38,35 @@ fun SongDeskTheme(accent: Color, content: @Composable () -> Unit) {
     )
 }
 
-/** 壁纸背景：程序生成图 + 上下压暗层保证 UI 可读 */
+/** HMI 背景：近纯黑 + 顶部中央微弱蓝色光晕（对齐新设计稿） */
 @Composable
-fun AppBackdrop(wallpaper: Wallpaper, content: @Composable () -> Unit) {
-    val ctx = LocalContext.current
-    val resId = remember(wallpaper) {
-        ctx.resources.getIdentifier(wallpaper.resName, "drawable", ctx.packageName)
-    }
-    Box(Modifier.fillMaxSize().background(DeepBg)) {
-        if (resId != 0) {
-            Image(
-                painter = painterResource(resId),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
-        // 可读性压暗：顶部轻、中部最透、底部加重（Dock 区域）
+fun AppBackdrop(wallpaper: Wallpaper?, content: @Composable () -> Unit) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color(0xFF07090F))
+    ) {
+        // 顶部中央蓝色光晕
         Box(
             Modifier
                 .fillMaxSize()
                 .background(
-                    Brush.verticalGradient(
-                        0f to Color.Black.copy(alpha = 0.30f),
-                        0.35f to Color.Black.copy(alpha = 0.16f),
-                        0.75f to Color.Black.copy(alpha = 0.38f),
-                        1f to Color.Black.copy(alpha = 0.55f),
+                    Brush.radialGradient(
+                        colors = listOf(Color(0xFF1B3A5C).copy(alpha = 0.55f), Color.Transparent),
+                        center = Offset(960f, -150f),
+                        radius = 1100f,
+                    )
+                )
+        )
+        // 底部微光
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(Color(0xFF12325A).copy(alpha = 0.25f), Color.Transparent),
+                        center = Offset(960f, 1250f),
+                        radius = 900f,
                     )
                 )
         )

@@ -3,55 +3,53 @@ package com.songdesk.launcher
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import kotlinx.coroutines.delay
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import com.songdesk.launcher.data.WeatherData
-import com.songdesk.launcher.data.WeatherRepository
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.songdesk.launcher.car.CarRepository
 import com.songdesk.launcher.car.DiLink3Bridge
+import com.songdesk.launcher.car.GuideProvider
 import com.songdesk.launcher.data.AppRepository
 import com.songdesk.launcher.data.LauncherPrefs
-import com.songdesk.launcher.ui.car.CarControlScreen
+import com.songdesk.launcher.data.WeatherData
+import com.songdesk.launcher.data.WeatherRepository
+import com.songdesk.launcher.speech.Speech
+import com.songdesk.launcher.ui.appcenter.AppCenterScreen
+import com.songdesk.launcher.ui.charge.ChargeScreen
 import com.songdesk.launcher.ui.home.Dock
 import com.songdesk.launcher.ui.home.DockAction
 import com.songdesk.launcher.ui.home.HomeScreen
 import com.songdesk.launcher.ui.home.launchDockAction
+import com.songdesk.launcher.ui.agent.AgentScreen
+import com.songdesk.launcher.ui.car.CarControlScreen
 import com.songdesk.launcher.ui.settings.SettingsScreen
-import com.songdesk.launcher.ui.theme.AccentIce
-import com.songdesk.launcher.ui.theme.AccentOrange
-import com.songdesk.launcher.ui.theme.AccentTeal
 import com.songdesk.launcher.ui.theme.AppBackdrop
 import com.songdesk.launcher.ui.theme.SongDeskTheme
-import com.songdesk.launcher.ui.theme.Wallpaper
+import kotlinx.coroutines.delay
 
-private enum class Dest { Home, Car, Settings, Agent, Charge }
+private enum class Dest { Home, Car, Settings, Agent, Charge, AppCenter }
 
 class MainActivity : ComponentActivity() {
 
@@ -70,20 +68,17 @@ class MainActivity : ComponentActivity() {
         val carRepo = CarRepository(applicationContext)
         carRepo.start()
         val bridge = DiLink3Bridge(this, carRepo)
-        val guideProvider = com.songdesk.launcher.car.GuideProvider(applicationContext)
+        val guideProvider = GuideProvider(applicationContext)
         guideProvider.start()
-        com.songdesk.launcher.speech.Speech.init(applicationContext)
-        com.songdesk.launcher.speech.Speech.voiceOn = prefs.voiceOn
+        Speech.init(applicationContext)
+        Speech.voiceOn = prefs.voiceOn
 
         setContent {
-            var accentIndex by remember { mutableIntStateOf(prefs.accentIndex) }
-            var wallpaperIndex by remember { mutableIntStateOf(prefs.wallpaperIndex) }
-            var sniffing by remember { mutableStateOf(false) }
-            var navDemo by remember { mutableStateOf(prefs.navDemo) }
             var voiceOn by remember { mutableStateOf(prefs.voiceOn) }
             var aiKey by remember { mutableStateOf(prefs.aiKey) }
-            val accents = remember { listOf(AccentIce, AccentTeal, AccentOrange) }
-            val wallpapers = remember { Wallpaper.entries.toList() }
+            var sniffing by remember { mutableStateOf(false) }
+            var navDemo by remember { mutableStateOf(prefs.navDemo) }
+            var mediaDemo by remember { mutableStateOf(false) }
             var weather by remember { mutableStateOf<WeatherData?>(null) }
 
             // 实时天气（MSN 优先 + Open-Meteo 兜底，失败重试一次）
@@ -92,7 +87,7 @@ class MainActivity : ComponentActivity() {
                 weather = repo.load() ?: repo.load()
             }
 
-            // 导航演示：周期合成高德车机版广播（含红绿灯读秒），验证导航卡全链路
+            // 导航演示：周期合成高德车机版广播（含红绿灯读秒）
             LaunchedEffect(navDemo) {
                 if (!navDemo) return@LaunchedEffect
                 val roads = listOf("未来大道", "滨河东路", "科创路", "郑州绕城高速")
@@ -107,8 +102,8 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            SongDeskTheme(accents[accentIndex.coerceIn(0, accents.lastIndex)]) {
-                AppBackdrop(wallpapers[wallpaperIndex.coerceIn(0, wallpapers.lastIndex)]) {
+            SongDeskTheme(accent = com.songdesk.launcher.ui.theme.AccentIce) {
+                AppBackdrop(wallpaper = null) {
                     var dest by remember { mutableStateOf(Dest.Home) }
 
                     Column(Modifier.fillMaxSize()) {
@@ -116,7 +111,6 @@ class MainActivity : ComponentActivity() {
                             AnimatedContent(
                                 targetState = dest,
                                 transitionSpec = {
-                                    // 按 Dest 枚举顺序做方向性滑动
                                     val forward = targetState.ordinal >= initialState.ordinal
                                     val fadeSpec = tween<Float>(260, easing = FastOutSlowInEasing)
                                     val slideSpec = tween<IntOffset>(260, easing = FastOutSlowInEasing)
@@ -141,54 +135,51 @@ class MainActivity : ComponentActivity() {
                                                 applicationContext, res ?: "未识别到可执行的指令", android.widget.Toast.LENGTH_SHORT,
                                             ).show()
                                         },
+                                        onOpenAppCenter = { dest = Dest.AppCenter },
                                         onCar = { dest = Dest.Car },
                                     )
-                                    Dest.Car -> CarControlScreen(bridge, onBack = { dest = Dest.Home }, onCharge = { dest = Dest.Charge })
-                                    Dest.Agent -> com.songdesk.launcher.ui.agent.AgentScreen(
-                                        bridge, aiKey, onBack = { dest = Dest.Home },
+                                    Dest.Car -> CarControlScreen(
+                                        bridge,
+                                        onBack = { dest = Dest.Home },
+                                        onCharge = { dest = Dest.Charge },
                                     )
                                     Dest.Charge -> com.songdesk.launcher.ui.charge.ChargeScreen(
                                         com.songdesk.launcher.data.ChargeStore(applicationContext),
                                         onBack = { dest = Dest.Home },
                                     )
+                                    Dest.Agent -> AgentScreen(
+                                        bridge, aiKey, onBack = { dest = Dest.Home },
+                                    )
+                                    Dest.AppCenter -> AppCenterScreen(
+                                        repo,
+                                        onBack = { dest = Dest.Home },
+                                        onAppClick = { pkg -> repo.launchPackage(pkg) },
+                                    )
                                     Dest.Settings -> SettingsScreen(
-                                        accentIndex = accentIndex,
-                                        wallpaperIndex = wallpaperIndex,
+                                        accentIndex = 0,
                                         sniffing = sniffing,
                                         navDemo = navDemo,
                                         voiceOn = voiceOn,
+                                        onVoiceChange = { on ->
+                                            voiceOn = on
+                                            prefs.voiceOn = on
+                                            com.songdesk.launcher.speech.Speech.voiceOn = on
+                                        },
+                                        onAccentChange = { },
                                         aiKey = aiKey,
                                         onAiKeyChange = { v ->
                                             aiKey = v
                                             prefs.aiKey = v
                                         },
                                         onOpenAgent = { dest = Dest.Agent },
-                                        onVoiceChange = { on ->
-                                            voiceOn = on
-                                            prefs.voiceOn = on
-                                            com.songdesk.launcher.speech.Speech.voiceOn = on
-                                        },
-                                        onNavDemoChange = { on ->
-                                            navDemo = on
-                                            prefs.navDemo = on
-                                        },
                                         onSniffingChange = { on ->
                                             sniffing = on
                                             carRepo.broadcastSource.setSniffing(on)
                                             com.songdesk.launcher.car.telemetry.SniffUploader.setEnabled(on)
                                         },
-                                        onAccentChange = { i ->
-                                            accentIndex = i
-                                            prefs.accentIndex = i
-                                        },
-                                        onWallpaperChange = { i ->
-                                            wallpaperIndex = i
-                                            prefs.wallpaperIndex = i
-                                            // 壁纸切换时自动配对强调色
-                                            val paired = Wallpaper.at(i).pairedAccent
-                                            val newAccent = accents.indexOfFirst { it == paired }.takeIf { it >= 0 } ?: accentIndex
-                                            accentIndex = newAccent
-                                            prefs.accentIndex = newAccent
+                                        onNavDemoChange = { on ->
+                                            navDemo = on
+                                            prefs.navDemo = on
                                         },
                                         onBack = { dest = Dest.Home },
                                         onExit = { finish() },
@@ -197,25 +188,12 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         Dock(
-                            active = dest.toDockAction(),
-                            customSlots = remember {
-                                val custom = prefs.dockApps.split(",").filter { it.isNotBlank() }
-                                if (custom.size >= 3) {
-                                    val allApps = repo.loadLaunchableApps()
-                                    custom.map { pkg ->
-                                        val app = allApps.firstOrNull { it.packageName == pkg }
-                                        com.songdesk.launcher.ui.home.DockAppSlot(
-                                            app?.label ?: pkg, app?.icon, pkg,
-                                        )
-                                    }
-                                } else emptyList()
-                            },
-                            modifier = Modifier.padding(bottom = 16.dp),
-                            onSlotApp = { slot -> repo.launchPackage(slot.pkg) },
+                            modifier = Modifier.padding(bottom = 8.dp),
                             onAction = { action ->
                                 when (action) {
                                     DockAction.CAR -> dest = Dest.Car
                                     DockAction.SETTINGS -> dest = Dest.Settings
+                                    DockAction.APP_CENTER -> dest = Dest.AppCenter
                                     else -> launchDockAction(repo, action, this@MainActivity)
                                 }
                             },
@@ -225,11 +203,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    private fun Dest.toDockAction(): DockAction? = when (this) {
-        Dest.Car -> DockAction.CAR
-        Dest.Settings -> DockAction.SETTINGS
-        Dest.Agent, Dest.Charge -> DockAction.CAR
-        Dest.Home -> null
-    }
 }
+
+private fun dp(dp: Int): androidx.compose.ui.unit.Dp = androidx.compose.ui.unit.Dp(dp.toFloat())
