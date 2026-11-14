@@ -52,7 +52,7 @@ import com.songdesk.launcher.ui.theme.TextSecondary
 
 /** 车控面板：空调（温度/风量/模式/除霜）+ 车窗天窗 + 座椅加热 + 智能场景 + 指令面板 */
 @Composable
-fun CarControlScreen(bridge: CarBridge, onBack: () -> Unit) {
+fun CarControlScreen(bridge: CarBridge, onBack: () -> Unit, onCharge: () -> Unit = {}) {
     val state by bridge.state.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
     var panelOpen by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
@@ -67,6 +67,11 @@ fun CarControlScreen(bridge: CarBridge, onBack: () -> Unit) {
                 Text("⚡充电中", style = TextStyle(fontSize = 13.sp), color = com.songdesk.launcher.ui.theme.OkGreen)
             }
             Spacer(Modifier.weight(1f))
+            GlassChip(
+                text = "充电记录",
+                selected = false,
+            ) { onCharge() }
+            Spacer(Modifier.size(10.dp))
             GlassChip(
                 text = "指令面板",
                 selected = false,

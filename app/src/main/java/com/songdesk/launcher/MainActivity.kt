@@ -51,7 +51,7 @@ import com.songdesk.launcher.ui.theme.AppBackdrop
 import com.songdesk.launcher.ui.theme.SongDeskTheme
 import com.songdesk.launcher.ui.theme.Wallpaper
 
-private enum class Dest { Home, Car, Settings }
+private enum class Dest { Home, Car, Settings, Agent, Charge }
 
 class MainActivity : ComponentActivity() {
 
@@ -81,6 +81,7 @@ class MainActivity : ComponentActivity() {
             var sniffing by remember { mutableStateOf(false) }
             var navDemo by remember { mutableStateOf(prefs.navDemo) }
             var voiceOn by remember { mutableStateOf(prefs.voiceOn) }
+            var aiKey by remember { mutableStateOf(prefs.aiKey) }
             val accents = remember { listOf(AccentIce, AccentTeal, AccentOrange) }
             val wallpapers = remember { Wallpaper.entries.toList() }
             var weather by remember { mutableStateOf<WeatherData?>(null) }
@@ -133,15 +134,35 @@ class MainActivity : ComponentActivity() {
                                     Dest.Home -> HomeScreen(
                                         repo, bridge, weather,
                                         guideState = guideProvider.state.collectAsState().value,
+                                        hiddenPkgs = prefs.hiddenPkgs,
+                                        onVoiceCommand = { text ->
+                                            val res = com.songdesk.launcher.commands.CommandDispatcher.execute(applicationContext, bridge, text)
+                                            android.widget.Toast.makeText(
+                                                applicationContext, res ?: "未识别到可执行的指令", android.widget.Toast.LENGTH_SHORT,
+                                            ).show()
+                                        },
                                         onCar = { dest = Dest.Car },
                                     )
-                                    Dest.Car -> CarControlScreen(bridge, onBack = { dest = Dest.Home })
+                                    Dest.Car -> CarControlScreen(bridge, onBack = { dest = Dest.Home }, onCharge = { dest = Dest.Charge })
+                                    Dest.Agent -> com.songdesk.launcher.ui.agent.AgentScreen(
+                                        bridge, aiKey, onBack = { dest = Dest.Home },
+                                    )
+                                    Dest.Charge -> com.songdesk.launcher.ui.charge.ChargeScreen(
+                                        com.songdesk.launcher.data.ChargeStore(applicationContext),
+                                        onBack = { dest = Dest.Home },
+                                    )
                                     Dest.Settings -> SettingsScreen(
                                         accentIndex = accentIndex,
                                         wallpaperIndex = wallpaperIndex,
                                         sniffing = sniffing,
                                         navDemo = navDemo,
                                         voiceOn = voiceOn,
+                                        aiKey = aiKey,
+                                        onAiKeyChange = { v ->
+                                            aiKey = v
+                                            prefs.aiKey = v
+                                        },
+                                        onOpenAgent = { dest = Dest.Agent },
                                         onVoiceChange = { on ->
                                             voiceOn = on
                                             prefs.voiceOn = on
@@ -177,7 +198,20 @@ class MainActivity : ComponentActivity() {
                         }
                         Dock(
                             active = dest.toDockAction(),
+                            customSlots = remember {
+                                val custom = prefs.dockApps.split(",").filter { it.isNotBlank() }
+                                if (custom.size >= 3) {
+                                    val allApps = repo.loadLaunchableApps()
+                                    custom.map { pkg ->
+                                        val app = allApps.firstOrNull { it.packageName == pkg }
+                                        com.songdesk.launcher.ui.home.DockAppSlot(
+                                            app?.label ?: pkg, app?.icon, pkg,
+                                        )
+                                    }
+                                } else emptyList()
+                            },
                             modifier = Modifier.padding(bottom = 16.dp),
+                            onSlotApp = { slot -> repo.launchPackage(slot.pkg) },
                             onAction = { action ->
                                 when (action) {
                                     DockAction.CAR -> dest = Dest.Car
@@ -195,6 +229,7 @@ class MainActivity : ComponentActivity() {
     private fun Dest.toDockAction(): DockAction? = when (this) {
         Dest.Car -> DockAction.CAR
         Dest.Settings -> DockAction.SETTINGS
+        Dest.Agent, Dest.Charge -> DockAction.CAR
         Dest.Home -> null
     }
 }

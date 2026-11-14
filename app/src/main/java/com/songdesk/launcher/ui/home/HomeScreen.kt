@@ -41,15 +41,25 @@ fun HomeScreen(
     bridge: CarBridge,
     weather: WeatherData?,
     guideState: com.songdesk.launcher.car.GuideState,
+    hiddenPkgs: Set<String> = emptySet(),
+    onVoiceCommand: (String) -> Unit = {},
     onCar: () -> Unit,
 ) {
     val context = LocalContext.current
-    val apps = remember { repo.loadLaunchableApps() }
+    val apps = remember { repo.loadLaunchableApps().filterNot { it.packageName in hiddenPkgs } }
 
     Column(Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp)) {
-        StatusStrip(weather)
+        StatusStrip(weather, onVoiceInput = onVoiceCommand)
         Spacer(Modifier.height(16.dp))
-        HeroCards(bridge, weather, Modifier.height(200.dp), onCarClick = onCar)
+        HeroCards(
+            bridge, weather, Modifier.height(200.dp),
+            onCarClick = onCar,
+            onLaunchMusic = {
+                if (!repo.launchFirst(*MUSIC_CANDIDATES)) {
+                    android.widget.Toast.makeText(context, "未找到音乐应用", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            },
+        )
         Spacer(Modifier.height(16.dp))
         if (guideState.navigating) {
             NavCard(guideState, Modifier.fillMaxWidth().height(120.dp))

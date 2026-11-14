@@ -51,12 +51,13 @@ private const val COLS = 6
 private const val ROWS = 3
 private const val PER_PAGE = COLS * ROWS
 
-/** 分页应用网格：每页 6×3，玻璃底板图标 + 长按菜单 */
+/** 分页应用网格：每页 6×3，玻璃底板图标 + 长按菜单（打开/应用信息/卸载/隐藏） */
 @Composable
 fun AppGrid(
     apps: List<AppEntry>,
     modifier: Modifier = Modifier,
     repo: AppRepository,
+    onHide: (String) -> Unit = {},
     onAppClick: (AppEntry) -> Unit,
 ) {
     val pages = remember(apps) { apps.chunked(PER_PAGE) }
@@ -73,7 +74,7 @@ fun AppGrid(
         ) {
             pageApps.chunked(COLS).forEach { rowApps ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-                    rowApps.forEach { app -> AppIconItem(app, repo) { onAppClick(app) } }
+                    rowApps.forEach { app -> AppIconItem(app, repo, onHide) { onAppClick(app) } }
                     repeat(COLS - rowApps.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
@@ -83,7 +84,7 @@ fun AppGrid(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun RowScope.AppIconItem(app: AppEntry, repo: AppRepository, onClick: () -> Unit) {
+private fun RowScope.AppIconItem(app: AppEntry, repo: AppRepository, onHide: (String) -> Unit, onClick: () -> Unit) {
     val context = LocalContext.current
     var menuOpen by remember { mutableStateOf(false) }
 
@@ -157,6 +158,10 @@ private fun RowScope.AppIconItem(app: AppEntry, repo: AppRepository, onClick: ()
                                         .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                                 )
                             }
+                        }
+                        MenuRow("隐藏") {
+                            menuOpen = false
+                            onHide(app.packageName)
                         }
                     }
                 }

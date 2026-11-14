@@ -35,16 +35,17 @@ import com.songdesk.launcher.ui.theme.ClockHuge
 import com.songdesk.launcher.ui.theme.TextPrimary
 import com.songdesk.launcher.ui.theme.TextSecondary
 
-/** 首排大卡：左 = 时钟/日期 + 实时天气，右 = 车况速览 */
+/** 首排大卡：时钟天气 + 音乐 + 车况 */
 @Composable
 fun HeroCards(
     bridge: CarBridge,
     weather: com.songdesk.launcher.data.WeatherData?,
     modifier: Modifier = Modifier,
     onCarClick: () -> Unit,
+    onLaunchMusic: () -> Unit = {},
 ) {
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        GlassCard(Modifier.weight(2f), contentFill = true) {
+        GlassCard(Modifier.weight(1.2f), contentFill = true) {
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 Column {
                     Text(rememberClock("HH:mm"), style = ClockHuge, color = TextPrimary)
@@ -75,6 +76,7 @@ fun HeroCards(
                 color = if (weather?.alertTitle != null) com.songdesk.launcher.ui.theme.WarnAmber else TextSecondary,
             )
         }
+        com.songdesk.launcher.ui.home.MusicCard(Modifier.weight(0.85f), onLaunchMusic = onLaunchMusic)
         CarStatusCard(bridge, Modifier.weight(1f), onCarClick)
     }
 }

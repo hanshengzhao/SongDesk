@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,6 +51,9 @@ fun SettingsScreen(
     navDemo: Boolean,
     voiceOn: Boolean,
     onVoiceChange: (Boolean) -> Unit,
+    aiKey: String,
+    onAiKeyChange: (String) -> Unit,
+    onOpenAgent: () -> Unit,
     onSniffingChange: (Boolean) -> Unit,
     onNavDemoChange: (Boolean) -> Unit,
     onAccentChange: (Int) -> Unit,
@@ -108,6 +113,22 @@ fun SettingsScreen(
                 style = TextStyle(fontSize = 14.sp),
                 color = TextSecondary,
             )
+
+            Spacer(Modifier.height(22.dp))
+            SectionLabel("AI 助理（DeepSeek / 智谱GLM）")
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = aiKey,
+                onValueChange = onAiKeyChange,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                placeholder = { Text("填入 API Key（DeepSeek / 智谱）", color = TextSecondary) },
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+            )
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                GlassChip("打开 AI 助理", selected = false) { onOpenAgent() }
+            }
 
             Spacer(Modifier.height(22.dp))
             SectionLabel("导航演示")

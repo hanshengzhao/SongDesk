@@ -23,4 +23,19 @@ class LauncherPrefs(context: Context) {
     var voiceOn: Boolean
         get() = sp.getBoolean("voice", true)
         set(v) = sp.edit().putBoolean("voice", v).apply()
+
+    /** 隐藏的应用包名集合 */
+    var hiddenPkgs: Set<String>
+        get() = sp.getStringSet("hidden", emptySet()) ?: emptySet()
+        set(v) = sp.edit().putStringSet("hidden", v).apply()
+
+    /** Dock 前三槽自定义包名（逗号分隔；空 = 默认 地图/音乐/电话） */
+    var dockApps: String
+        get() = sp.getString("dockApps", "") ?: ""
+        set(v) = sp.edit().putString("dockApps", v).apply()
+
+    /** AI 助理 API Key */
+    var aiKey: String
+        get() = sp.getString("aiKey", "") ?: ""
+        set(v) = sp.edit().putString("aiKey", v).apply()
 }
