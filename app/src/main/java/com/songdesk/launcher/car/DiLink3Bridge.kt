@@ -64,6 +64,11 @@ class DiLink3Bridge(context: Context, private val repository: CarRepository) : C
         sendAutoVoice("一键关窗")
     }
 
+    override fun toggleInternalRecirc() {
+        repository.applyClimate { it.copy(internalRecirc = !it.internalRecirc) }
+        sendAutoVoice("内循环")
+    }
+
     override fun setSeatHeat(seat: SeatId, level: Int) = repository.applyClimate { s ->
         val v = level.coerceIn(0, 3)
         when (seat) {

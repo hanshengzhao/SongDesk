@@ -26,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -100,6 +101,39 @@ fun MainPanelContent(
                         color = TextSecondary,
                     )
                 }
+            }
+            Spacer(Modifier.height(18.dp))
+            // 空气质量 + 车内外温度
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                InfoTile(
+                    label = "空气质量",
+                    value = if (weather?.aqiLabel != null) weather.aqiLabel else "优",
+                    tint = com.songdesk.launcher.ui.theme.OkGreen,
+                )
+                InfoTile(
+                    label = "车内温度",
+                    value = state.insideTempC?.let { "${it}°C" } ?: "--",
+                    tint = TextPrimary,
+                )
+                InfoTile(
+                    label = "车外温度",
+                    value = state.outsideTempC?.let { "${it}°C" } ?: "--",
+                    tint = TextPrimary,
+                )
+            }
+            Spacer(Modifier.height(14.dp))
+            // 胎压状态
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                InfoTile(
+                    label = "胎压 左前/右前",
+                    value = "${state.tirePressures["左前"]}/${state.tirePressures["右前"]} kPa",
+                    tint = TextPrimary,
+                )
+                InfoTile(
+                    label = "胎压 左后/右后",
+                    value = "${state.tirePressures["左后"]}/${state.tirePressures["右后"]} kPa",
+                    tint = TextPrimary,
+                )
             }
         }
 
@@ -181,6 +215,43 @@ fun MainPanelContent(
                     NowPlayingStore.activeController?.transportControls?.skipToNext()
                 }
             }
+            Spacer(Modifier.height(14.dp))
+            // 音量控制（AudioManager）
+            val ctx = androidx.compose.ui.platform.LocalContext.current
+            val am = remember { ctx.getSystemService(android.content.Context.AUDIO_SERVICE) as android.media.AudioManager }
+            val vol = remember { androidx.compose.runtime.mutableIntStateOf(
+                am.getStreamVolume(android.media.AudioManager.STREAM_MUSIC) * 100 /
+                    (am.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC).coerceAtLeast(1))
+            ) }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth(0.8f),
+            ) {
+                Text("音量", style = TextStyle(fontSize = 12.sp), color = TextSecondary)
+                MiniRound("−") {
+                    val nv = (vol.intValue - 10).coerceIn(0, 100)
+                    vol.intValue = nv
+                    com.songdesk.launcher.commands.SystemActions.setVolume(ctx, nv)
+                }
+                Box(
+                    Modifier.weight(1f).height(6.dp)
+                        .background(color = Color.White.copy(alpha = 0.10f), shape = RoundedCornerShape(3.dp))
+                ) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth(vol.intValue / 100f)
+                            .height(6.dp)
+                            .background(color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(3.dp))
+                    )
+                }
+                MiniRound("＋") {
+                    val nv = (vol.intValue + 10).coerceIn(0, 100)
+                    vol.intValue = nv
+                    com.songdesk.launcher.commands.SystemActions.setVolume(ctx, nv)
+                }
+                Text("${vol.intValue}%", style = TextStyle(fontSize = 12.sp), color = TextSecondary)
+            }
         }
 
         Spacer(Modifier.width(8.dp))
@@ -233,6 +304,12 @@ fun MainPanelContent(
                     text = "车窗 ${if (state.allWindowsClosed) "已关闭" else "未关"}",
                     ok = state.allWindowsClosed,
                 )
+                StatusPill(
+                    icon = "🌬",
+                    text = "内循环 ${if (state.internalRecirc) "开" else "关"}",
+                    ok = state.internalRecirc,
+                    onClick = { bridge.toggleInternalRecirc() },
+                )
             }
             Spacer(Modifier.height(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -269,8 +346,10 @@ fun MainPanelContent(
 
 /** 状态胶囊（车门/车窗） */
 @Composable
-private fun StatusPill(icon: String, text: String, ok: Boolean) {
+private fun StatusPill(icon: String, text: String, ok: Boolean, onClick: (() -> Unit)? = null) {
     Surface(
+        onClick = { onClick?.invoke() },
+        enabled = onClick != null,
         shape = RoundedCornerShape(14.dp),
         color = Color.White.copy(alpha = 0.06f),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.10f)),
@@ -327,5 +406,18 @@ private fun RoundIconBtn(
                 modifier = Modifier.size(sizeDp * 0.42f),
             )
         }
+    }
+}
+
+/** 信息小瓦片：标签在上、值在下 */
+@Composable
+private fun InfoTile(label: String, value: String, tint: Color) {
+    Column(
+        Modifier
+            .background(color = Color.White.copy(alpha = 0.05f), shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+    ) {
+        Text(label, style = TextStyle(fontSize = 11.sp), color = TextSecondary)
+        Text(value, style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium), color = tint)
     }
 }

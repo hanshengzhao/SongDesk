@@ -23,6 +23,10 @@ data class CarState(
     val outsideTempC: Int? = null,
     val doorsLocked: Boolean = true,
     val source: DataSource = DataSource.MOCK,
+    /** 四轮胎压 kPa（FL/FR/RL/RR） */
+    val tirePressures: Map<String, Int> = mapOf("左前" to 241, "右前" to 243, "左后" to 238, "右后" to 240),
+    val cabinFilterOk: Boolean = true,
+    val internalRecirc: Boolean = false,
     // ---- climate ----
     val acOn: Boolean = true,
     val tempC: Int = 23,          // 18..28

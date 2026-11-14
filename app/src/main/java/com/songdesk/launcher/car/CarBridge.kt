@@ -18,4 +18,5 @@ interface CarBridge {
     fun setWindowOpen(id: WindowId, open: Boolean)
     fun closeAllWindows()
     fun setSeatHeat(seat: SeatId, level: Int)
+    fun toggleInternalRecirc()
 }

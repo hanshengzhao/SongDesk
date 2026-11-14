@@ -31,6 +31,8 @@ open class MockCarBridge(initial: CarState = CarState()) : CarBridge {
     override fun closeAllWindows() =
         update { s -> s.copy(windowOpen = WindowId.entries.associateWith { false }) }
 
+    override fun toggleInternalRecirc() = update { it.copy(internalRecirc = !it.internalRecirc) }
+
     override fun setSeatHeat(seat: SeatId, level: Int) = update {
         val v = level.coerceIn(0, 3)
         when (seat) {
