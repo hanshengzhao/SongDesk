@@ -88,6 +88,7 @@ fun CarControlScreen(bridge: CarBridge, onBack: () -> Unit) {
                     android.widget.Toast.makeText(
                         context, "${scene.name}：${results.size} 步已执行", android.widget.Toast.LENGTH_SHORT,
                     ).show()
+                    com.songdesk.launcher.speech.Speech.speak("${scene.name}已执行")
                 }
             }
         }

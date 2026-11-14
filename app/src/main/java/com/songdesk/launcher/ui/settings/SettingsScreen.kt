@@ -47,6 +47,8 @@ fun SettingsScreen(
     wallpaperIndex: Int,
     sniffing: Boolean,
     navDemo: Boolean,
+    voiceOn: Boolean,
+    onVoiceChange: (Boolean) -> Unit,
     onSniffingChange: (Boolean) -> Unit,
     onNavDemoChange: (Boolean) -> Unit,
     onAccentChange: (Int) -> Unit,
@@ -119,6 +121,20 @@ fun SettingsScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 GlassChip("开启演示", selected = navDemo) { onNavDemoChange(true) }
                 GlassChip("关闭", selected = !navDemo) { onNavDemoChange(false) }
+            }
+
+            Spacer(Modifier.height(22.dp))
+            SectionLabel("语音播报")
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "任务与场景执行后语音提示（真车走原车语音，其他设备走本地合成）",
+                style = TextStyle(fontSize = 14.sp),
+                color = TextSecondary,
+            )
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                GlassChip("开启", selected = voiceOn) { onVoiceChange(true) }
+                GlassChip("关闭", selected = !voiceOn) { onVoiceChange(false) }
             }
 
             Spacer(Modifier.height(22.dp))

@@ -47,6 +47,11 @@ private data class QuickTask(
 
 private fun toast(c: Context, msg: String) = Toast.makeText(c, msg, Toast.LENGTH_SHORT).show()
 
+private fun speak(c: Context, msg: String) {
+    toast(c, msg)
+    com.songdesk.launcher.speech.Speech.speak(msg)
+}
+
 /**
  * 导航到常用关键字（家/公司）：高德车机版广播 → 高德手机版深链 → 百度深链。
  * 广播协议来自对迪粉桌面 navigate 工具的逆向（KEY_TYPE=10036 关键字搜索）。
@@ -59,7 +64,7 @@ private fun navigateTo(c: Context, r: AppRepository, dest: String) {
             putExtra("KEY_KEYWORD", dest)
         }
         if (runCatching { c.sendBroadcast(i); true }.getOrDefault(false)) {
-            toast(c, "正在规划去「$dest」的路线")
+            speak(c, "正在规划去「$dest」的路线")
             return
         }
     }
@@ -71,7 +76,7 @@ private fun navigateTo(c: Context, r: AppRepository, dest: String) {
                 )
                 true
             }.getOrDefault(false)) {
-            toast(c, "正在规划去「$dest」的路线")
+            speak(c, "正在规划去「$dest」的路线")
             return
         }
     }
@@ -83,24 +88,24 @@ private fun navigateTo(c: Context, r: AppRepository, dest: String) {
                 )
                 true
             }.getOrDefault(false)) {
-            toast(c, "正在规划去「$dest」的路线")
+            speak(c, "正在规划去「$dest」的路线")
             return
         }
     }
-    toast(c, "未找到可用的导航应用")
+    speak(c, "未找到可用的导航应用")
 }
 
 private val QUICK_TASKS = listOf(
     QuickTask(Icons.Filled.Home, "回家", "一键导航") { c, r, _ -> navigateTo(c, r, "家") },
     QuickTask(Icons.Filled.Business, "上班", "一键导航") { c, r, _ -> navigateTo(c, r, "公司") },
     QuickTask(Icons.Filled.AcUnit, "一键除霜", "前后除霜") { c, _, b ->
-        b.setDefrost(true, true); toast(c, "已开启前后除霜")
+        b.setDefrost(true, true); speak(c, "已开启前后除霜")
     },
     QuickTask(Icons.Filled.Workspaces, "一键关窗", "全车车窗") { c, _, b ->
-        b.closeAllWindows(); toast(c, "全车车窗已关闭")
+        b.closeAllWindows(); speak(c, "全车车窗已关闭")
     },
     QuickTask(Icons.Filled.Air, "开空调", "22°C 舒适") { c, _, b ->
-        b.setAcOn(true); b.setAcTemp(22); toast(c, "空调已开启 22°C")
+        b.setAcOn(true); b.setAcTemp(22); speak(c, "空调已开启，22 度")
     },
 )
 

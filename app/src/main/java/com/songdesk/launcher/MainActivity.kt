@@ -72,12 +72,15 @@ class MainActivity : ComponentActivity() {
         val bridge = DiLink3Bridge(this, carRepo)
         val guideProvider = com.songdesk.launcher.car.GuideProvider(applicationContext)
         guideProvider.start()
+        com.songdesk.launcher.speech.Speech.init(applicationContext)
+        com.songdesk.launcher.speech.Speech.voiceOn = prefs.voiceOn
 
         setContent {
             var accentIndex by remember { mutableIntStateOf(prefs.accentIndex) }
             var wallpaperIndex by remember { mutableIntStateOf(prefs.wallpaperIndex) }
             var sniffing by remember { mutableStateOf(false) }
             var navDemo by remember { mutableStateOf(prefs.navDemo) }
+            var voiceOn by remember { mutableStateOf(prefs.voiceOn) }
             val accents = remember { listOf(AccentIce, AccentTeal, AccentOrange) }
             val wallpapers = remember { Wallpaper.entries.toList() }
             var weather by remember { mutableStateOf<WeatherData?>(null) }
@@ -138,6 +141,12 @@ class MainActivity : ComponentActivity() {
                                         wallpaperIndex = wallpaperIndex,
                                         sniffing = sniffing,
                                         navDemo = navDemo,
+                                        voiceOn = voiceOn,
+                                        onVoiceChange = { on ->
+                                            voiceOn = on
+                                            prefs.voiceOn = on
+                                            com.songdesk.launcher.speech.Speech.voiceOn = on
+                                        },
                                         onNavDemoChange = { on ->
                                             navDemo = on
                                             prefs.navDemo = on

@@ -18,4 +18,9 @@ class LauncherPrefs(context: Context) {
     var navDemo: Boolean
         get() = sp.getBoolean("navDemo", false)
         set(v) = sp.edit().putBoolean("navDemo", v).apply()
+
+    /** 语音播报开关 */
+    var voiceOn: Boolean
+        get() = sp.getBoolean("voice", true)
+        set(v) = sp.edit().putBoolean("voice", v).apply()
 }
