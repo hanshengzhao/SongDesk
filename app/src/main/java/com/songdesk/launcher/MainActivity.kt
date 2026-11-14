@@ -116,6 +116,7 @@ class MainActivity : ComponentActivity() {
                                         onSniffingChange = { on ->
                                             sniffing = on
                                             carRepo.broadcastSource.setSniffing(on)
+                                            com.songdesk.launcher.car.telemetry.SniffUploader.setEnabled(on)
                                         },
                                         onAccentChange = { i ->
                                             accentIndex = i

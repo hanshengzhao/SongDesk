@@ -52,6 +52,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onExit: () -> Unit,
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Column(Modifier.fillMaxSize().padding(24.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Surface(onClick = onBack, shape = CircleShape, color = MaterialTheme.colorScheme.surface) {
@@ -108,15 +109,17 @@ fun SettingsScreen(
             SectionLabel("车机协议嗅探")
             Spacer(Modifier.height(8.dp))
             Text(
-                "上车后开启：记录原车广播原始字段（logcat tag: SongDeskSniff），用于校准车况协议",
+                "上车后开启：抓到的原车广播字段会自动上传云端（主题 songdesk-sniff-v1），开发者远程拉取即可校准车况协议，无需连接电脑",
                 style = TextStyle(fontSize = 14.sp),
                 color = TextSecondary,
             )
             Spacer(Modifier.height(10.dp))
-            Row {
-                GlassChip("开启抓包", selected = sniffing) { onSniffingChange(true) }
-                Spacer(Modifier.width(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                GlassChip("开启抓包+上传", selected = sniffing) { onSniffingChange(true) }
                 GlassChip("关闭", selected = !sniffing) { onSniffingChange(false) }
+                GlassChip("发送测试", selected = false) {
+                    com.songdesk.launcher.car.telemetry.SniffUploader.sendTest(context)
+                }
             }
 
             Spacer(Modifier.height(24.dp))

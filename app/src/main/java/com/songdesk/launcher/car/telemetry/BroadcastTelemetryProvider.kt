@@ -31,7 +31,9 @@ class BroadcastTelemetryProvider(private val context: Context) :
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context, i: Intent) {
             if (sniff) {
-                Log.i(TAG, "SNIFF action=${i.action} extras=${i.extras?.keySet()?.joinToString { k -> "$k=${i.getStringExtra(k) ?: i.getIntExtra(k, Int.MIN_VALUE).let { if (it == Int.MIN_VALUE) "?" else it } }}"}}")
+                val line = "action=" + i.action + " extras=" + extrasToString(i)
+                Log.i(TAG, "SNIFF $line")
+                SniffUploader.enqueue(line)
             }
             val ex = i.extras ?: return
             // 防御式解析：字段名以真车实测为准
@@ -73,6 +75,22 @@ class BroadcastTelemetryProvider(private val context: Context) :
 
     /** 打开/关闭协议嗅探（上车校准用） */
     fun setSniffing(enabled: Boolean) { sniff = enabled }
+
+    /** extras 序列化（避免深层嵌套字符串模板） */
+    private fun extrasToString(i: Intent): String {
+        val ex = i.extras ?: return "{}"
+        val body = ex.keySet().joinToString(", ") { k ->
+            val v = when {
+                i.getStringExtra(k) != null -> i.getStringExtra(k)!!
+                i.getIntExtra(k, Int.MIN_VALUE) != Int.MIN_VALUE -> i.getIntExtra(k, Int.MIN_VALUE).toString()
+                i.getLongExtra(k, Long.MIN_VALUE) != Long.MIN_VALUE -> i.getLongExtra(k, Long.MIN_VALUE).toString()
+                i.getBooleanExtra(k, false) != false -> i.getBooleanExtra(k, false).toString()
+                else -> "?"
+            }
+            "$k=$v"
+        }
+        return "{$body}"
+    }
 
     companion object {
         const val TAG = "SongDeskSniff"
