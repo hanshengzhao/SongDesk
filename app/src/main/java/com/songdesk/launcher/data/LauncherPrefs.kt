@@ -13,4 +13,9 @@ class LauncherPrefs(context: Context) {
     var wallpaperIndex: Int
         get() = sp.getInt("wallpaper", 0)
         set(v) = sp.edit().putInt("wallpaper", v).apply()
+
+    /** 导航演示（合成高德车机版广播，验证导航卡/红绿灯读秒） */
+    var navDemo: Boolean
+        get() = sp.getBoolean("navDemo", false)
+        set(v) = sp.edit().putBoolean("navDemo", v).apply()
 }

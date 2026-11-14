@@ -14,6 +14,7 @@ import com.songdesk.launcher.car.CarBridge
 import com.songdesk.launcher.data.AppEntry
 import com.songdesk.launcher.data.AppRepository
 import com.songdesk.launcher.data.WeatherData
+import androidx.compose.foundation.layout.fillMaxWidth
 
 private val MAPS_CANDIDATES = arrayOf(
     "com.autonavi.amapauto",   // 高德车机版
@@ -33,9 +34,15 @@ private val PHONE_CANDIDATES = arrayOf(
     "com.android.contacts",
 )
 
-/** 主页 = 状态条 + 双英雄卡 + 应用网格（Dock 由 Activity 统一放置） */
+/** 主页 = 状态条 + 双英雄卡 + 导航卡(导航中) + 快捷任务 + 应用网格 */
 @Composable
-fun HomeScreen(repo: AppRepository, bridge: CarBridge, weather: WeatherData?, onCar: () -> Unit) {
+fun HomeScreen(
+    repo: AppRepository,
+    bridge: CarBridge,
+    weather: WeatherData?,
+    guideState: com.songdesk.launcher.car.GuideState,
+    onCar: () -> Unit,
+) {
     val context = LocalContext.current
     val apps = remember { repo.loadLaunchableApps() }
 
@@ -44,6 +51,10 @@ fun HomeScreen(repo: AppRepository, bridge: CarBridge, weather: WeatherData?, on
         Spacer(Modifier.height(16.dp))
         HeroCards(bridge, weather, Modifier.height(200.dp), onCarClick = onCar)
         Spacer(Modifier.height(16.dp))
+        if (guideState.navigating) {
+            NavCard(guideState, Modifier.fillMaxWidth().height(120.dp))
+            Spacer(Modifier.height(16.dp))
+        }
         QuickTasks(bridge, repo, Modifier.height(132.dp))
         Spacer(Modifier.height(16.dp))
         AppGrid(apps, Modifier.weight(1f), repo) { app: AppEntry -> repo.launchPackage(app.packageName) }

@@ -40,13 +40,15 @@ import com.songdesk.launcher.ui.theme.TextPrimary
 import com.songdesk.launcher.ui.theme.TextSecondary
 import com.songdesk.launcher.ui.theme.Wallpaper
 
-/** 设置页：壁纸四选一 + 强调色三选一 + 嗅探开关 + 关于 */
+/** 设置页：壁纸四选一 + 强调色三选一 + 嗅探/演示开关 + 关于 */
 @Composable
 fun SettingsScreen(
     accentIndex: Int,
     wallpaperIndex: Int,
     sniffing: Boolean,
+    navDemo: Boolean,
     onSniffingChange: (Boolean) -> Unit,
+    onNavDemoChange: (Boolean) -> Unit,
     onAccentChange: (Int) -> Unit,
     onWallpaperChange: (Int) -> Unit,
     onBack: () -> Unit,
@@ -104,6 +106,20 @@ fun SettingsScreen(
                 style = TextStyle(fontSize = 14.sp),
                 color = TextSecondary,
             )
+
+            Spacer(Modifier.height(22.dp))
+            SectionLabel("导航演示")
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "模拟高德车机版导航广播（含红绿灯读秒），用于验证主页导航卡",
+                style = TextStyle(fontSize = 14.sp),
+                color = TextSecondary,
+            )
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                GlassChip("开启演示", selected = navDemo) { onNavDemoChange(true) }
+                GlassChip("关闭", selected = !navDemo) { onNavDemoChange(false) }
+            }
 
             Spacer(Modifier.height(22.dp))
             SectionLabel("车机协议嗅探")

@@ -11,6 +11,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import kotlinx.coroutines.delay
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -68,11 +70,14 @@ class MainActivity : ComponentActivity() {
         val carRepo = CarRepository(applicationContext)
         carRepo.start()
         val bridge = DiLink3Bridge(this, carRepo)
+        val guideProvider = com.songdesk.launcher.car.GuideProvider(applicationContext)
+        guideProvider.start()
 
         setContent {
             var accentIndex by remember { mutableIntStateOf(prefs.accentIndex) }
             var wallpaperIndex by remember { mutableIntStateOf(prefs.wallpaperIndex) }
             var sniffing by remember { mutableStateOf(false) }
+            var navDemo by remember { mutableStateOf(prefs.navDemo) }
             val accents = remember { listOf(AccentIce, AccentTeal, AccentOrange) }
             val wallpapers = remember { Wallpaper.entries.toList() }
             var weather by remember { mutableStateOf<WeatherData?>(null) }
@@ -81,6 +86,21 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 val repo = WeatherRepository()
                 weather = repo.load() ?: repo.load()
+            }
+
+            // 导航演示：周期合成高德车机版广播（含红绿灯读秒），验证导航卡全链路
+            LaunchedEffect(navDemo) {
+                if (!navDemo) return@LaunchedEffect
+                val roads = listOf("未来大道", "滨河东路", "科创路", "郑州绕城高速")
+                var cd = 15
+                var dis = 850
+                while (true) {
+                    guideProvider.sendDemoBroadcast(cd, roads[(cd / 4).mod(roads.size)], dis)
+                    cd -= 1
+                    dis = (dis - 35).coerceAtLeast(60)
+                    if (cd < 0) { cd = 15; dis = 850 }
+                    delay(1000)
+                }
             }
 
             SongDeskTheme(accents[accentIndex.coerceIn(0, accents.lastIndex)]) {
@@ -107,12 +127,21 @@ class MainActivity : ComponentActivity() {
                                 label = "dest",
                             ) { d ->
                                 when (d) {
-                                    Dest.Home -> HomeScreen(repo, bridge, weather, onCar = { dest = Dest.Car })
+                                    Dest.Home -> HomeScreen(
+                                        repo, bridge, weather,
+                                        guideState = guideProvider.state.collectAsState().value,
+                                        onCar = { dest = Dest.Car },
+                                    )
                                     Dest.Car -> CarControlScreen(bridge, onBack = { dest = Dest.Home })
                                     Dest.Settings -> SettingsScreen(
                                         accentIndex = accentIndex,
                                         wallpaperIndex = wallpaperIndex,
                                         sniffing = sniffing,
+                                        navDemo = navDemo,
+                                        onNavDemoChange = { on ->
+                                            navDemo = on
+                                            prefs.navDemo = on
+                                        },
                                         onSniffingChange = { on ->
                                             sniffing = on
                                             carRepo.broadcastSource.setSniffing(on)
