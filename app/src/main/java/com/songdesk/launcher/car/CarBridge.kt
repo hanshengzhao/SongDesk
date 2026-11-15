@@ -12,6 +12,7 @@ interface CarBridge {
 
     fun setAcOn(on: Boolean)
     fun setAcTemp(temp: Int)
+    fun setPassengerTemp(temp: Int)
     fun setFanLevel(level: Int)
     fun setBlowZone(face: Boolean, foot: Boolean)
     fun setDefrost(front: Boolean, rear: Boolean)

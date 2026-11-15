@@ -40,6 +40,12 @@ class DiLink3Bridge(context: Context, private val repository: CarRepository) : C
         sendAutoVoice("温度:${temp.coerceIn(18, 28)}")
     }
 
+    override fun setPassengerTemp(temp: Int) {
+        val v = temp.coerceIn(18, 28)
+        repository.applyClimate { it.copy(passengerTempC = v) }
+        sendAutoVoice("副驾温度:$v")
+    }
+
     override fun setFanLevel(level: Int) {
         repository.applyClimate { it.copy(fanLevel = level.coerceIn(0, 7)) }
         sendAutoVoice("风量:${level.coerceIn(0, 7)}")

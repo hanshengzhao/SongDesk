@@ -116,6 +116,12 @@ fun CarControlScreen(bridge: CarBridge, onBack: () -> Unit, onCharge: () -> Unit
                             Text("${state.tempC}", style = BigValue, color = MaterialTheme.colorScheme.primary)
                             Text("°C", style = TextStyle(fontSize = 24.sp), color = TextSecondary)
                         }
+                        Text(
+                            "主驾 24° ｜ 副驾 ${state.passengerTempC}°",
+                            style = TextStyle(fontSize = 12.sp),
+                            color = TextSecondary,
+                            modifier = Modifier.padding(top = 6.dp),
+                        )
                     }
                     RoundButton(Icons.Filled.Add, "升温") { bridge.setAcTemp(state.tempC + 1) }
                 }

@@ -12,8 +12,24 @@ android {
         applicationId = "com.songdesk.launcher"
         minSdk = 28
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("songdesk-release.keystore")
+            storePassword = "songdesk2026"
+            keyAlias = "songdesk"
+            keyPassword = "songdesk2026"
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+        }
     }
 
     compileOptions {

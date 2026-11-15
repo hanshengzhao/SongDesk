@@ -17,6 +17,8 @@ open class MockCarBridge(initial: CarState = CarState()) : CarBridge {
 
     override fun setAcTemp(temp: Int) = update { it.copy(tempC = temp.coerceIn(18, 28)) }
 
+    override fun setPassengerTemp(temp: Int) = update { it.copy(passengerTempC = temp.coerceIn(18, 28)) }
+
     override fun setFanLevel(level: Int) = update { it.copy(fanLevel = level.coerceIn(0, 7)) }
 
     override fun setBlowZone(face: Boolean, foot: Boolean) =

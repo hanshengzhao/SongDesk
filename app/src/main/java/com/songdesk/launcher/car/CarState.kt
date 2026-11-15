@@ -29,7 +29,8 @@ data class CarState(
     val internalRecirc: Boolean = false,
     // ---- climate ----
     val acOn: Boolean = true,
-    val tempC: Int = 23,          // 18..28
+    val tempC: Int = 23,          // 18..28 主驾
+    val passengerTempC: Int = 23, // 18..28 副驾
     val fanLevel: Int = 2,        // 0..7
     val blowFace: Boolean = true,
     val blowFoot: Boolean = false,

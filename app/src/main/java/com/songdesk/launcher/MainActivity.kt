@@ -35,6 +35,7 @@ import com.songdesk.launcher.car.GuideProvider
 import com.songdesk.launcher.data.AppRepository
 import com.songdesk.launcher.data.LauncherPrefs
 import com.songdesk.launcher.data.WeatherData
+import com.songdesk.launcher.data.ChargeStore
 import com.songdesk.launcher.data.WeatherRepository
 import com.songdesk.launcher.speech.Speech
 import com.songdesk.launcher.ui.appcenter.AppCenterScreen
@@ -66,6 +67,7 @@ class MainActivity : ComponentActivity() {
 
         val repo = AppRepository(this)
         val prefs = LauncherPrefs(this)
+        val chargeStore = com.songdesk.launcher.data.ChargeStore(applicationContext)
         val carRepo = CarRepository(applicationContext)
         carRepo.start()
         val bridge = DiLink3Bridge(this, carRepo)
@@ -130,6 +132,7 @@ class MainActivity : ComponentActivity() {
                                 when (d) {
                                     Dest.Home -> HomeScreen(
                                         repo, bridge, weather,
+                                        chargeStore = chargeStore,
                                         guideState = guideProvider.state.collectAsState().value,
                                         hiddenPkgs = prefs.hiddenPkgs,
                                         onVoiceCommand = { text ->

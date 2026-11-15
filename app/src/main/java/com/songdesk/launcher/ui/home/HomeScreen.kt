@@ -33,6 +33,7 @@ import com.songdesk.launcher.car.CarBridge
 import com.songdesk.launcher.car.GuideState
 import com.songdesk.launcher.data.AppEntry
 import com.songdesk.launcher.data.AppRepository
+import com.songdesk.launcher.data.ChargeRecord
 import com.songdesk.launcher.data.WeatherData
 import com.songdesk.launcher.ui.common.GlassChip
 import com.songdesk.launcher.ui.common.rememberClock
@@ -45,10 +46,12 @@ fun HomeScreen(
     repo: AppRepository,
     bridge: CarBridge,
     weather: WeatherData?,
+    chargeStore: com.songdesk.launcher.data.ChargeStore,
     guideState: GuideState,
     hiddenPkgs: Set<String> = emptySet(),
     onVoiceCommand: (String) -> Unit = {},
     onOpenAppCenter: () -> Unit = {},
+    onOpenCharge: () -> Unit = {},
     onCar: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -109,6 +112,14 @@ fun HomeScreen(
 
             // ---- 快捷任务卡行 ----
             QuickTasks(bridge, repo, Modifier.height(164.dp))
+
+            Spacer(Modifier.height(16.dp))
+
+            // ---- 充电/能耗卡 ----
+            com.songdesk.launcher.ui.home.ChargeCard(
+                records = remember(chargeStore) { chargeStore.load() },
+                modifier = Modifier.fillMaxWidth().height(150.dp),
+            ) { onOpenCharge() }
 
             Spacer(Modifier.height(12.dp))
         }
