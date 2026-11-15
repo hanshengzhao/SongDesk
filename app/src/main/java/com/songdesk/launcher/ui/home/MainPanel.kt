@@ -1,6 +1,7 @@
 package com.songdesk.launcher.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +27,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,17 +43,22 @@ import com.songdesk.launcher.media.NowPlayingStore
 import com.songdesk.launcher.ui.common.RingGauge
 import com.songdesk.launcher.ui.common.VinylDisc
 import com.songdesk.launcher.ui.common.rememberClock
+import com.songdesk.launcher.ui.common.GlassChip
 import com.songdesk.launcher.ui.theme.ClockHuge
 import com.songdesk.launcher.ui.theme.OkGreen
 import com.songdesk.launcher.ui.theme.TextPrimary
 import com.songdesk.launcher.ui.theme.TextSecondary
+import com.songdesk.launcher.ui.theme.WarnAmber
 
 private fun mmss(ms: Long): String {
-    val s = ms / 1000
-    return "%02d:%02d".format(s / 60, s % 60)
+    val total = ms / 1000
+    return "%02d:%02d".format(total / 60, total % 60)
 }
 
-/** 主面板三列：时钟天气 | 正在播放（黑胶） | 车辆状态（圆环） */
+/**
+ * 主面板三列：时钟天气 | 正在播放（大黑胶 240dp 视觉锚点） | 车辆状态（130dp 圆环）。
+ * 碎瓦片全部并入行内指标，消除空旷感。
+ */
 @Composable
 fun MainPanelContent(
     bridge: CarBridge,
@@ -64,36 +69,36 @@ fun MainPanelContent(
     val np by NowPlayingStore.state.collectAsState()
 
     Row(modifier = modifier.fillMaxWidth()) {
-        // ============ 列1：时钟 + 天气 ============
+        // ============ 列1：时钟 + 天气 + 环境 ============
         Column(
-            Modifier.weight(1.1f).fillMaxHeight(),
+            Modifier.weight(1.15f).fillMaxHeight(),
             verticalArrangement = Arrangement.Center,
         ) {
             Text(rememberClock("HH:mm"), style = ClockHuge, color = TextPrimary)
             Text(
                 rememberClock("MM月dd日 EEEE"),
-                style = TextStyle(fontSize = 15.sp),
+                style = TextStyle(fontSize = 16.sp),
                 color = TextSecondary,
-                modifier = Modifier.padding(top = 8.dp),
+                modifier = Modifier.padding(top = 10.dp),
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(26.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     Modifier
-                        .size(44.dp)
+                        .size(52.dp)
                         .background(
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                             shape = CircleShape,
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(weather?.emoji ?: "🌤", fontSize = 22.sp)
+                    Text(weather?.emoji ?: "🌤", fontSize = 26.sp)
                 }
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(14.dp))
                 Column {
                     Text(
-                        weather?.let { "${it.tempC}°C ${it.condition}" } ?: "天气 --",
-                        style = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.SemiBold),
+                        weather?.let { "${it.tempC}°C  ${it.condition}" } ?: "天气 --",
+                        style = TextStyle(fontSize = 19.sp, fontWeight = FontWeight.SemiBold),
                         color = TextPrimary,
                     )
                     Text(
@@ -104,52 +109,37 @@ fun MainPanelContent(
                 }
             }
             Spacer(Modifier.height(18.dp))
-            // 空气质量 + 车内外温度
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                InfoTile(
-                    label = "空气质量",
-                    value = if (weather?.aqiLabel != null) weather.aqiLabel else "优",
-                    tint = com.songdesk.launcher.ui.theme.OkGreen,
-                )
-                InfoTile(
-                    label = "车内温度",
-                    value = state.insideTempC?.let { "${it}°C" } ?: "--",
-                    tint = TextPrimary,
-                )
-                InfoTile(
-                    label = "车外温度",
-                    value = state.outsideTempC?.let { "${it}°C" } ?: "--",
-                    tint = TextPrimary,
+            // 环境指标行
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (weather?.aqiLabel != null) {
+                    Text("空气 ${weather.aqiLabel}", style = TextStyle(fontSize = 13.sp), color = OkGreen)
+                    Dot()
+                }
+                Text("车内 ${state.insideTempC?.let { "${it}°" } ?: "--"}", style = TextStyle(fontSize = 13.sp), color = TextSecondary)
+                Dot()
+                Text("车外 ${state.outsideTempC?.let { "${it}°" } ?: "--"}", style = TextStyle(fontSize = 13.sp), color = TextSecondary)
+                Dot()
+                Text(
+                    "胎压 ${state.tirePressures.values.minOrNull() ?: 240}~${state.tirePressures.values.maxOrNull() ?: 240} kPa",
+                    style = TextStyle(fontSize = 13.sp), color = TextSecondary,
                 )
             }
-            Spacer(Modifier.height(14.dp))
-            // 胎压 + 本次行程
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                InfoTile(
-                    label = "胎压 左前/右前",
-                    value = "${state.tirePressures["左前"]}/${state.tirePressures["右前"]} kPa",
-                    tint = TextPrimary,
-                )
-                InfoTile(
-                    label = "胎压 左后/右后",
-                    value = "${state.tirePressures["左后"]}/${state.tirePressures["右后"]} kPa",
-                    tint = TextPrimary,
-                )
-            }
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(18.dp))
             // 本次行程
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                InfoTile(label = "本次行程", value = "12.4 km", tint = TextPrimary)
-                InfoTile(label = "行驶时长", value = "18 分钟", tint = TextPrimary)
-                InfoTile(label = "平均电耗", value = "13.6 kWh", tint = com.songdesk.launcher.ui.theme.OkGreen)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TripStat("12.4", "km")
+                Spacer(Modifier.width(20.dp))
+                TripStat("18", "min")
+                Spacer(Modifier.width(20.dp))
+                TripStat("13.6", "kWh/100km")
             }
         }
 
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(14.dp))
 
-        // ============ 列2：正在播放（黑胶唱片） ============
+        // ============ 列2：正在播放（大黑胶 240dp） ============
         Column(
-            Modifier.weight(1f).fillMaxHeight(),
+            Modifier.weight(1.2f).fillMaxHeight(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -157,44 +147,36 @@ fun MainPanelContent(
                 Text("🎵", fontSize = 14.sp)
                 Text("正在播放", style = TextStyle(fontSize = 14.sp), color = TextSecondary)
             }
-            Spacer(Modifier.height(12.dp))
-            // 黑胶唱片
+            Spacer(Modifier.height(16.dp))
             VinylDisc(
-                modifier = Modifier.size(172.dp),
+                modifier = Modifier.size(240.dp),
                 accent = MaterialTheme.colorScheme.primary,
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
             Text(
                 if (np.title.isBlank()) "未在播放" else "《${np.title}》",
-                style = TextStyle(fontSize = 19.sp, fontWeight = FontWeight.SemiBold),
+                style = TextStyle(fontSize = 21.sp, fontWeight = FontWeight.SemiBold),
                 color = TextPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                np.artist,
-                style = TextStyle(fontSize = 13.sp),
-                color = TextSecondary,
-                modifier = Modifier.padding(top = 4.dp),
-            )
+            np.artist.takeIf { it.isNotBlank() }?.let {
+                Text(it, style = TextStyle(fontSize = 13.sp), color = TextSecondary, modifier = Modifier.padding(top = 4.dp))
+            }
             if (np.durationMs > 0) {
-                Spacer(Modifier.height(10.dp))
-                // 进度条
+                Spacer(Modifier.height(12.dp))
                 Box(
                     Modifier
-                        .fillMaxWidth(0.8f)
-                        .height(4.dp)
-                        .background(
-                            color = Color.White.copy(alpha = 0.12f),
-                            shape = RoundedCornerShape(2.dp),
-                        )
+                        .fillMaxWidth(0.72f)
+                        .height(5.dp)
+                        .background(color = Color.White.copy(alpha = 0.12f), shape = RoundedCornerShape(3.dp))
                 ) {
                     val frac = if (np.durationMs > 0) (np.positionMs.toFloat() / np.durationMs).coerceIn(0f, 1f) else 0f
                     Box(
                         Modifier
                             .fillMaxWidth(frac)
-                            .height(4.dp)
-                            .background(color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(2.dp))
+                            .height(5.dp)
+                            .background(color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(3.dp))
                     )
                 }
                 Spacer(Modifier.height(6.dp))
@@ -204,16 +186,15 @@ fun MainPanelContent(
                     color = TextSecondary,
                 )
             }
-            Spacer(Modifier.height(14.dp))
-            // 播控
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Spacer(Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                 RoundIconBtn(Icons.Filled.SkipPrevious, "上一首", 56.dp) {
                     NowPlayingStore.activeController?.transportControls?.skipToPrevious()
                 }
                 RoundIconBtn(
                     if (np.playing && np.title.isNotBlank()) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                     "播放/暂停",
-                    74.dp,
+                    76.dp,
                     filled = true,
                 ) {
                     if (np.playing) NowPlayingStore.activeController?.transportControls?.pause()
@@ -223,84 +204,52 @@ fun MainPanelContent(
                     NowPlayingStore.activeController?.transportControls?.skipToNext()
                 }
             }
-            Spacer(Modifier.height(14.dp))
-            // 音量控制（AudioManager）
-            val ctx = androidx.compose.ui.platform.LocalContext.current
-            val am = remember { ctx.getSystemService(android.content.Context.AUDIO_SERVICE) as android.media.AudioManager }
-            val vol = remember { androidx.compose.runtime.mutableIntStateOf(
-                am.getStreamVolume(android.media.AudioManager.STREAM_MUSIC) * 100 /
-                    (am.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC).coerceAtLeast(1))
-            ) }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth(0.8f),
-            ) {
-                Text("音量", style = TextStyle(fontSize = 12.sp), color = TextSecondary)
-                MiniRound("−") {
-                    val nv = (vol.intValue - 10).coerceIn(0, 100)
-                    vol.intValue = nv
-                    com.songdesk.launcher.commands.SystemActions.setVolume(ctx, nv)
-                }
-                Box(
-                    Modifier.weight(1f).height(6.dp)
-                        .background(color = Color.White.copy(alpha = 0.10f), shape = RoundedCornerShape(3.dp))
-                ) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth(vol.intValue / 100f)
-                            .height(6.dp)
-                            .background(color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(3.dp))
-                    )
-                }
-                MiniRound("＋") {
-                    val nv = (vol.intValue + 10).coerceIn(0, 100)
-                    vol.intValue = nv
-                    com.songdesk.launcher.commands.SystemActions.setVolume(ctx, nv)
-                }
-                Text("${vol.intValue}%", style = TextStyle(fontSize = 12.sp), color = TextSecondary)
-            }
         }
 
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(14.dp))
 
-        // ============ 列3：车辆状态（圆环仪表） ============
+        // ============ 列3：车辆状态 ============
         Column(
-            Modifier.weight(1f).fillMaxHeight(),
+            Modifier.weight(1.05f).fillMaxHeight(),
             verticalArrangement = Arrangement.Center,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("🚗", fontSize = 14.sp)
                 Text("车辆状态", style = TextStyle(fontSize = 14.sp), color = TextSecondary)
             }
-            Spacer(Modifier.height(14.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                // 电量环
+            Spacer(Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                 RingGauge(
                     progress = state.batteryPct / 100f,
-                    color = com.songdesk.launcher.ui.theme.OkGreen,
-                    size = 104.dp,
+                    color = OkGreen,
+                    size = 130.dp,
+                    strokeWidth = 9.dp,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             "${state.batteryPct}%",
-                            style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
+                            style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold),
                             color = TextPrimary,
                         )
-                        Text("电量", style = TextStyle(fontSize = 11.sp), color = TextSecondary)
+                        Text("电量", style = TextStyle(fontSize = 12.sp), color = TextSecondary)
                     }
                 }
                 Column {
                     Text("纯电续航", style = TextStyle(fontSize = 12.sp), color = TextSecondary)
                     Text(
                         "${state.rangeKm} km",
-                        style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Bold),
+                        style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold),
                         color = TextPrimary,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        if (state.charging) "⚡ 充电中" else "综合 ${state.rangeKm * 2} km",
+                        style = TextStyle(fontSize = 12.sp),
+                        color = if (state.charging) OkGreen else TextSecondary,
                     )
                 }
             }
-            Spacer(Modifier.height(12.dp))
-            // 门锁/车窗胶囊
+            Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 StatusPill(
                     icon = "🔒",
@@ -312,84 +261,92 @@ fun MainPanelContent(
                     text = "车窗 ${if (state.allWindowsClosed) "已关闭" else "未关"}",
                     ok = state.allWindowsClosed,
                 )
-                StatusPill(
-                    icon = "🌬",
-                    text = "内循环 ${if (state.internalRecirc) "开" else "关"}",
-                    ok = state.internalRecirc,
-                    onClick = { bridge.toggleInternalRecirc() },
-                )
-                StatusPill(
-                    icon = "❄",
-                    text = "主驾通风 ${if (state.driverSeatVent > 0) "${state.driverSeatVent}档" else "关"}",
-                    ok = state.driverSeatVent > 0,
-                    onClick = {
-                        val nv = if (state.driverSeatVent > 0) 0 else 1
-                        bridge.setSeatVent(SeatId.DRIVER, nv)
-                    },
-                )
-                StatusPill(
-                    icon = "♨",
-                    text = "方向盘 ${if (state.steeringHeat > 0) "加热${state.steeringHeat}" else "未加热"}",
-                    ok = state.steeringHeat > 0,
-                    onClick = {
-                        val nv = if (state.steeringHeat > 0) 0 else 1
-                        bridge.setSteeringHeat(nv)
-                    },
-                )
             }
-            Spacer(Modifier.height(14.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                // 空调温度环
+            Spacer(Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                 RingGauge(
                     progress = (state.tempC - 18) / 10f,
                     color = MaterialTheme.colorScheme.primary,
-                    size = 104.dp,
+                    size = 130.dp,
+                    strokeWidth = 9.dp,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            "${state.tempC}.0°",
-                            style = TextStyle(fontSize = 19.sp, fontWeight = FontWeight.Bold),
-                            color = TextPrimary,
-                        )
-                        Text("空调温度", style = TextStyle(fontSize = 11.sp), color = TextSecondary)
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                "${state.tempC}",
+                                style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold),
+                                color = TextPrimary,
+                            )
+                            Text("°C", style = TextStyle(fontSize = 13.sp), color = TextSecondary, modifier = Modifier.padding(bottom = 4.dp))
+                        }
+                        Text("空调温度", style = TextStyle(fontSize = 12.sp), color = TextSecondary)
                     }
                 }
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("风量", style = TextStyle(fontSize = 13.sp), color = TextSecondary)
                         MiniRound("−") { bridge.setFanLevel((state.fanLevel - 1).coerceIn(0, 7)) }
                         Text(
-                            "风量 · ${state.fanLevel}",
-                            style = TextStyle(fontSize = 13.sp),
-                            color = TextSecondary,
+                            "${state.fanLevel}",
+                            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium),
+                            color = TextPrimary,
+                            modifier = Modifier.width(16.dp),
                         )
                         MiniRound("＋") { bridge.setFanLevel((state.fanLevel + 1).coerceIn(0, 7)) }
                     }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("内循环", style = TextStyle(fontSize = 13.sp), color = TextSecondary)
+                        GlassChip(
+                            text = if (state.internalRecirc) "开" else "关",
+                            selected = state.internalRecirc,
+                        ) { bridge.toggleInternalRecirc() }
+                    }
                 }
+            }
+            Spacer(Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("座椅通风", style = TextStyle(fontSize = 13.sp), color = TextSecondary)
+                SeatVentPicker("主驾", state.driverSeatVent) { bridge.setSeatVent(SeatId.DRIVER, it) }
+                SeatVentPicker("副驾", state.passengerSeatVent) { bridge.setSeatVent(SeatId.PASSENGER, it) }
             }
         }
     }
 }
 
-/** 状态胶囊（车门/车窗） */
 @Composable
-private fun StatusPill(icon: String, text: String, ok: Boolean, onClick: (() -> Unit)? = null) {
-    Surface(
-        onClick = { onClick?.invoke() },
-        enabled = onClick != null,
-        shape = RoundedCornerShape(14.dp),
-        color = Color.White.copy(alpha = 0.06f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.10f)),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-        ) {
-            Text(icon, fontSize = 13.sp)
-            Spacer(Modifier.width(6.dp))
+private fun Dot() {
+    Box(
+        Modifier
+            .padding(horizontal = 8.dp)
+            .size(4.dp)
+            .background(color = TextSecondary.copy(alpha = 0.5f), shape = CircleShape)
+    )
+}
+
+@Composable
+private fun TripStat(value: String, unit: String) {
+    Row(verticalAlignment = Alignment.Bottom) {
+        Text(value, style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold), color = TextPrimary)
+        Spacer(Modifier.width(4.dp))
+        Text(unit, style = TextStyle(fontSize = 12.sp), color = TextSecondary)
+    }
+}
+
+@Composable
+private fun SeatVentPicker(label: String, level: Int, onPick: (Int) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, style = TextStyle(fontSize = 13.sp), color = TextSecondary)
+        listOf(0, 1, 2, 3).forEach { lv ->
             Text(
-                text,
-                style = TextStyle(fontSize = 13.sp),
-                color = if (ok) OkGreen else com.songdesk.launcher.ui.theme.WarnAmber,
+                if (lv == 0) "关" else "$lv",
+                style = TextStyle(
+                    fontSize = 13.sp,
+                    fontWeight = if (level == lv) FontWeight.Bold else FontWeight.Normal,
+                ),
+                color = if (level == lv) MaterialTheme.colorScheme.primary else TextSecondary,
+                modifier = Modifier
+                    .clickable { onPick(lv) }
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
             )
         }
     }
@@ -409,7 +366,8 @@ private fun MiniRound(text: String, onClick: () -> Unit) {
     }
 }
 
-/** 圆形播控按钮（filled=true 时强调色填充） */
+
+/** 主面板圆形播控按钮 */
 @Composable
 private fun RoundIconBtn(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -421,8 +379,7 @@ private fun RoundIconBtn(
     Surface(
         onClick = onClick,
         shape = CircleShape,
-        color = if (filled) MaterialTheme.colorScheme.primary
-        else Color.White.copy(alpha = 0.10f),
+        color = if (filled) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.10f),
     ) {
         Box(Modifier.size(sizeDp), contentAlignment = Alignment.Center) {
             Icon(
@@ -435,15 +392,28 @@ private fun RoundIconBtn(
     }
 }
 
-/** 信息小瓦片：标签在上、值在下 */
+
+/** 状态胶囊（车门/车窗/内循环） */
 @Composable
-private fun InfoTile(label: String, value: String, tint: Color) {
-    Column(
-        Modifier
-            .background(color = Color.White.copy(alpha = 0.05f), shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
-            .padding(horizontal = 14.dp, vertical = 8.dp)
+private fun StatusPill(icon: String, text: String, ok: Boolean, onClick: (() -> Unit)? = null) {
+    Surface(
+        onClick = { onClick?.invoke() },
+        enabled = onClick != null,
+        shape = RoundedCornerShape(14.dp),
+        color = Color.White.copy(alpha = 0.06f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.10f)),
     ) {
-        Text(label, style = TextStyle(fontSize = 11.sp), color = TextSecondary)
-        Text(value, style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium), color = tint)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+        ) {
+            Text(icon, fontSize = 13.sp)
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text,
+                style = TextStyle(fontSize = 13.sp),
+                color = if (ok) OkGreen else WarnAmber,
+            )
+        }
     }
 }
