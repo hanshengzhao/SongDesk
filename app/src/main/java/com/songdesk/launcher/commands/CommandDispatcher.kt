@@ -56,6 +56,19 @@ object CommandDispatcher {
         add(Command("副驾加热:N", listOf("副驾加热"), "座椅", "副驾座椅加热 0~3") { _, b, s ->
             val v = param(s); if (v in 0..3) b.setSeatHeat(SeatId.PASSENGER, v)
         })
+        add(Command("主驾通风:N", listOf("主驾通风"), "座椅", "主驾座椅通风 0~3") { _, b, s ->
+            val v = param(s); if (v in 0..3) b.setSeatVent(SeatId.DRIVER, v)
+        })
+        add(Command("副驾通风:N", listOf("副驾通风"), "座椅", "副驾座椅通风 0~3") { _, b, s ->
+            val v = param(s); if (v in 0..3) b.setSeatVent(SeatId.PASSENGER, v)
+        })
+        add(Command("方向盘加热:N", listOf("方向盘加热"), "座椅", "方向盘加热 0~2") { _, b, s ->
+            val v = param(s); if (v in 0..2) b.setSteeringHeat(v)
+        })
+        add(Command("开后备箱", listOf("打开后备箱"), "车身", "打开后备箱") { _, b, _ -> b.toggleTrunk() })
+        add(Command("关后备箱", listOf("关闭后备箱"), "车身", "关闭后备箱") { _, b, _ -> b.toggleTrunk() })
+        add(Command("寻车", listOf("我在哪"), "车身", "闪灯鸣笛寻车") { _, b, _ -> b.findCar() })
+        add(Command("内循环", listOf("内循环开", "内循环关"), "空调", "切换空调内循环") { _, b, _ -> b.toggleInternalRecirc() })
 
         // ---- 系统 ----
         add(Command("音量:N", listOf("设置音量"), "系统", "媒体音量 0~100") { c, _, s ->

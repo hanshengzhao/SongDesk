@@ -56,6 +56,7 @@ fun CarControlScreen(bridge: CarBridge, onBack: () -> Unit, onCharge: () -> Unit
     val state by bridge.state.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
     var panelOpen by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var trunkConfirm by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().padding(24.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -178,16 +179,39 @@ fun CarControlScreen(bridge: CarBridge, onBack: () -> Unit, onCharge: () -> Unit
                 }
 
                 GlassCard(Modifier.weight(0.55f), contentFill = true) {
-                    SectionLabel("座椅加热")
-                    Spacer(Modifier.weight(1f))
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("主驾", style = TextStyle(fontSize = 14.sp), color = TextSecondary)
+                    SectionLabel("座椅加热 / 通风")
+                    Spacer(Modifier.weight(0.8f))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("主驾", style = TextStyle(fontSize = 13.sp), color = TextSecondary)
                         SeatHeatPicker(state.driverSeatHeat) { bridge.setSeatHeat(SeatId.DRIVER, it) }
                         Spacer(Modifier.weight(0.5f))
-                        Text("副驾", style = TextStyle(fontSize = 14.sp), color = TextSecondary)
+                        Text("副驾", style = TextStyle(fontSize = 13.sp), color = TextSecondary)
                         SeatHeatPicker(state.passengerSeatHeat) { bridge.setSeatHeat(SeatId.PASSENGER, it) }
                     }
-                    Spacer(Modifier.weight(1f))
+                    Spacer(Modifier.weight(0.8f))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("通风", style = TextStyle(fontSize = 13.sp), color = TextSecondary)
+                        SeatHeatPicker(state.driverSeatVent) { bridge.setSeatVent(SeatId.DRIVER, it) }
+                        Spacer(Modifier.weight(0.5f))
+                        Text("副驾通风", style = TextStyle(fontSize = 13.sp), color = TextSecondary)
+                        SeatHeatPicker(state.passengerSeatVent) { bridge.setSeatVent(SeatId.PASSENGER, it) }
+                    }
+                    Spacer(Modifier.weight(0.8f))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("方向盘", style = TextStyle(fontSize = 13.sp), color = TextSecondary)
+                        listOf(0, 1, 2).forEach { lv ->
+                            GlassChip(
+                                text = if (lv == 0) "关" else "$lv",
+                                selected = state.steeringHeat == lv,
+                            ) { bridge.setSteeringHeat(lv) }
+                        }
+                        Spacer(Modifier.weight(0.5f))
+                        GlassChip(
+                            "后备箱 ${if (state.trunkOpen) "开" else "关"}",
+                            selected = state.trunkOpen,
+                        ) { trunkConfirm = true }
+                    }
+                    Spacer(Modifier.weight(0.8f))
                 }
             }
         }

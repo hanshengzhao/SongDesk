@@ -19,4 +19,8 @@ interface CarBridge {
     fun closeAllWindows()
     fun setSeatHeat(seat: SeatId, level: Int)
     fun toggleInternalRecirc()
+    fun setSeatVent(seat: SeatId, level: Int)
+    fun setSteeringHeat(level: Int)
+    fun toggleTrunk()
+    fun findCar()
 }

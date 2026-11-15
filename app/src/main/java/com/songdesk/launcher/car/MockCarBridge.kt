@@ -33,6 +33,20 @@ open class MockCarBridge(initial: CarState = CarState()) : CarBridge {
 
     override fun toggleInternalRecirc() = update { it.copy(internalRecirc = !it.internalRecirc) }
 
+    override fun setSeatVent(seat: SeatId, level: Int) = update { s ->
+        val v = level.coerceIn(0, 3)
+        when (seat) {
+            SeatId.DRIVER -> s.copy(driverSeatVent = v)
+            SeatId.PASSENGER -> s.copy(passengerSeatVent = v)
+        }
+    }
+
+    override fun setSteeringHeat(level: Int) = update { it.copy(steeringHeat = level.coerceIn(0, 2)) }
+
+    override fun toggleTrunk() = update { it.copy(trunkOpen = !it.trunkOpen) }
+
+    override fun findCar() { /* 真车：闪灯鸣笛；Mock 无操作 */ }
+
     override fun setSeatHeat(seat: SeatId, level: Int) = update {
         val v = level.coerceIn(0, 3)
         when (seat) {

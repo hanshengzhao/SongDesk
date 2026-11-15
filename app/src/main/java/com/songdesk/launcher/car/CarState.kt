@@ -38,6 +38,13 @@ data class CarState(
     val windowOpen: Map<WindowId, Boolean> = WindowId.entries.associateWith { false },
     val driverSeatHeat: Int = 0,      // 0..3
     val passengerSeatHeat: Int = 0,
+    val driverSeatVent: Int = 0,      // 0..3 通风
+    val passengerSeatVent: Int = 0,
+    val steeringHeat: Int = 0,        // 0..2 方向盘加热
+    val trunkOpen: Boolean = false,
+    val tripKm: Float = 12.4f,        // 本次行程
+    val tripMinutes: Int = 18,
+    val tripAvgKwh: Float = 13.6f,    // 平均电耗 kWh/100km
 ) {
     val allWindowsClosed: Boolean get() = windowOpen.values.none { it }
 }

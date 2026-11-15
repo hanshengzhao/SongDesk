@@ -64,6 +64,32 @@ class DiLink3Bridge(context: Context, private val repository: CarRepository) : C
         sendAutoVoice("一键关窗")
     }
 
+    override fun setSeatVent(seat: SeatId, level: Int) {
+        val v = level.coerceIn(0, 3)
+        repository.applyClimate { s ->
+            when (seat) {
+                SeatId.DRIVER -> s.copy(driverSeatVent = v)
+                SeatId.PASSENGER -> s.copy(passengerSeatVent = v)
+            }
+        }
+        sendAutoVoice("${if (seat == SeatId.DRIVER) "主驾" else "副驾"}通风:$v")
+    }
+
+    override fun setSteeringHeat(level: Int) {
+        repository.applyClimate { it.copy(steeringHeat = level.coerceIn(0, 2)) }
+        sendAutoVoice(if (level > 0) "方向盘加热:${level}" else "方向盘加热关")
+    }
+
+    override fun toggleTrunk() {
+        val willOpen = !repository.state.value.trunkOpen
+        repository.applyClimate { it.copy(trunkOpen = willOpen) }
+        sendAutoVoice(if (willOpen) "开后备箱" else "关后备箱")
+    }
+
+    override fun findCar() {
+        sendAutoVoice("寻车")
+    }
+
     override fun toggleInternalRecirc() {
         repository.applyClimate { it.copy(internalRecirc = !it.internalRecirc) }
         sendAutoVoice("内循环")

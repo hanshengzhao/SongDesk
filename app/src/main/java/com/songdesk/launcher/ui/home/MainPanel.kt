@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.songdesk.launcher.car.CarBridge
+import com.songdesk.launcher.car.SeatId
 import com.songdesk.launcher.data.WeatherData
 import com.songdesk.launcher.media.NowPlayingStore
 import com.songdesk.launcher.ui.common.RingGauge
@@ -122,7 +123,7 @@ fun MainPanelContent(
                 )
             }
             Spacer(Modifier.height(14.dp))
-            // 胎压状态
+            // 胎压 + 本次行程
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 InfoTile(
                     label = "胎压 左前/右前",
@@ -134,6 +135,13 @@ fun MainPanelContent(
                     value = "${state.tirePressures["左后"]}/${state.tirePressures["右后"]} kPa",
                     tint = TextPrimary,
                 )
+            }
+            Spacer(Modifier.height(14.dp))
+            // 本次行程
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                InfoTile(label = "本次行程", value = "12.4 km", tint = TextPrimary)
+                InfoTile(label = "行驶时长", value = "18 分钟", tint = TextPrimary)
+                InfoTile(label = "平均电耗", value = "13.6 kWh", tint = com.songdesk.launcher.ui.theme.OkGreen)
             }
         }
 
@@ -309,6 +317,24 @@ fun MainPanelContent(
                     text = "内循环 ${if (state.internalRecirc) "开" else "关"}",
                     ok = state.internalRecirc,
                     onClick = { bridge.toggleInternalRecirc() },
+                )
+                StatusPill(
+                    icon = "❄",
+                    text = "主驾通风 ${if (state.driverSeatVent > 0) "${state.driverSeatVent}档" else "关"}",
+                    ok = state.driverSeatVent > 0,
+                    onClick = {
+                        val nv = if (state.driverSeatVent > 0) 0 else 1
+                        bridge.setSeatVent(SeatId.DRIVER, nv)
+                    },
+                )
+                StatusPill(
+                    icon = "♨",
+                    text = "方向盘 ${if (state.steeringHeat > 0) "加热${state.steeringHeat}" else "未加热"}",
+                    ok = state.steeringHeat > 0,
+                    onClick = {
+                        val nv = if (state.steeringHeat > 0) 0 else 1
+                        bridge.setSteeringHeat(nv)
+                    },
                 )
             }
             Spacer(Modifier.height(14.dp))
