@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.songdesk.launcher.car.CarBridge
@@ -119,7 +120,7 @@ fun QuickTasks(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         QUICK_TASKS.forEach { task ->
             GlassCard(
                 modifier = Modifier
@@ -138,17 +139,17 @@ fun QuickTasks(
                         color = Color.Transparent,
                         border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)),
                     ) {
-                        Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(74.dp), contentAlignment = Alignment.Center) {
                             Icon(
                                 task.icon,
                                 contentDescription = task.title,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(28.dp),
+                                modifier = Modifier.size(36.dp),
                             )
                         }
                     }
-                    Spacer(Modifier.height(14.dp))
-                    Text(task.title, style = TextStyle(fontSize = 18.sp), color = TextPrimary)
+                    Spacer(Modifier.height(16.dp))
+                    Text(task.title, style = TextStyle(fontSize = 21.sp, fontWeight = FontWeight.Medium), color = TextPrimary)
                 }
             }
         }

@@ -102,7 +102,7 @@ fun HomeScreen(
             Spacer(Modifier.height(14.dp))
 
             // ---- 快捷任务卡行 ----
-            QuickTasks(bridge, repo, Modifier.height(140.dp))
+            QuickTasks(bridge, repo, Modifier.height(164.dp))
 
             Spacer(Modifier.height(12.dp))
         }
@@ -141,7 +141,7 @@ private fun LightBadge(seconds: Int, modifier: Modifier = Modifier) {
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 "$seconds",
-                style = TextStyle(fontSize = 34.sp, fontWeight = FontWeight.Bold),
+                style = TextStyle(fontSize = 40.sp, fontWeight = FontWeight.Bold),
                 color = color,
             )
             Text("s", style = TextStyle(fontSize = 13.sp), color = TextSecondary, modifier = Modifier.padding(bottom = 4.dp))

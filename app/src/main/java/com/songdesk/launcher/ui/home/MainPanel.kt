@@ -160,7 +160,7 @@ fun MainPanelContent(
             Spacer(Modifier.height(12.dp))
             // 黑胶唱片
             VinylDisc(
-                modifier = Modifier.size(150.dp),
+                modifier = Modifier.size(172.dp),
                 accent = MaterialTheme.colorScheme.primary,
             )
             Spacer(Modifier.height(12.dp))
@@ -207,19 +207,19 @@ fun MainPanelContent(
             Spacer(Modifier.height(14.dp))
             // 播控
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                RoundIconBtn(Icons.Filled.SkipPrevious, "上一首", 48.dp) {
+                RoundIconBtn(Icons.Filled.SkipPrevious, "上一首", 56.dp) {
                     NowPlayingStore.activeController?.transportControls?.skipToPrevious()
                 }
                 RoundIconBtn(
                     if (np.playing && np.title.isNotBlank()) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                     "播放/暂停",
-                    64.dp,
+                    74.dp,
                     filled = true,
                 ) {
                     if (np.playing) NowPlayingStore.activeController?.transportControls?.pause()
                     else NowPlayingStore.activeController?.transportControls?.play()
                 }
-                RoundIconBtn(Icons.Filled.SkipNext, "下一首", 48.dp) {
+                RoundIconBtn(Icons.Filled.SkipNext, "下一首", 56.dp) {
                     NowPlayingStore.activeController?.transportControls?.skipToNext()
                 }
             }
@@ -279,7 +279,7 @@ fun MainPanelContent(
                 RingGauge(
                     progress = state.batteryPct / 100f,
                     color = com.songdesk.launcher.ui.theme.OkGreen,
-                    size = 92.dp,
+                    size = 104.dp,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
@@ -343,7 +343,7 @@ fun MainPanelContent(
                 RingGauge(
                     progress = (state.tempC - 18) / 10f,
                     color = MaterialTheme.colorScheme.primary,
-                    size = 92.dp,
+                    size = 104.dp,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
