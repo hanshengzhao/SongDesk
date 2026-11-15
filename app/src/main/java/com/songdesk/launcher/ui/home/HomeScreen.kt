@@ -101,6 +101,12 @@ fun HomeScreen(
 
             Spacer(Modifier.height(14.dp))
 
+            // ---- 导航卡（导航中显示：道路/距离/红绿灯读秒已在徽章） ----
+            if (guideState.navigating) {
+                NavCard(guideState, Modifier.fillMaxWidth().height(120.dp))
+                Spacer(Modifier.height(14.dp))
+            }
+
             // ---- 快捷任务卡行 ----
             QuickTasks(bridge, repo, Modifier.height(164.dp))
 

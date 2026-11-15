@@ -2,6 +2,7 @@ package com.songdesk.launcher
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -105,6 +106,8 @@ class MainActivity : ComponentActivity() {
             SongDeskTheme(accent = com.songdesk.launcher.ui.theme.AccentIce) {
                 AppBackdrop(wallpaper = null) {
                     var dest by remember { mutableStateOf(Dest.Home) }
+                    // 子页面按返回键回主页；主页不退出（车机返回键交还原车/忽略）
+                    BackHandler(enabled = dest != Dest.Home) { dest = Dest.Home }
 
                     Column(Modifier.fillMaxSize()) {
                         Box(Modifier.weight(1f)) {
