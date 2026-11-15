@@ -10,3 +10,5 @@ build
 .cxx
 local.properties
 app/build
+songdesk-release.keystore
+*.keystore
